@@ -3,14 +3,15 @@
 {% block title %}Home {% endblock title %}
 
 
-
-
 {% block body %}
 {% include 'navbar.html' %}
-
-
+<div class="container">
+  <div class="row">
+{% for product in all_products %}
 {% include 'card.html' %}
-
+{% endfor %}
+</div>
+</div>
 
 {% if current_user.is_anonymous %}
 <section id="register" style="background: url('static/images/background-img.png') no-repeat;">
@@ -19,13 +20,7 @@
 
       <div class="row my-5 py-5">
         <div class="offset-md-3 col-md-6 my-5 ">
-          <h4 style="color: rgb(244, 33, 9); text-align: center;"> {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for msg in messages %}
-                    <p>{{ msg }}</p>
-                {% endfor %}
-            {% endif %}
-            {% endwith %}</h4>
+          {% include '_messages.html' %}
           <h2 class="display-3 fw-normal text-center">Register Now!
           </h2>
           <form method="post">
