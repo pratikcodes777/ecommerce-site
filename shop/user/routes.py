@@ -5,7 +5,7 @@ from shop import app, bcrypt, db, mail
 from flask_login import login_user, current_user, logout_user
 from flask_mail import Message
 from .models import User
-from shop.product.models import Product
+from shop.product.models import Product, Category
 from sqlalchemy import or_
 
 
@@ -13,6 +13,7 @@ from sqlalchemy import or_
 @app.route('/' , methods=['POST' , 'GET'])
 def home():
     all_products = Product.query.all()
+    all_category = Category.query.all()
     if request.method == "POST":
         email = request.form['email']
         password = request.form['password']
@@ -31,7 +32,7 @@ def home():
         else:
             flash("Email already exists.")
 
-    return render_template("home.html" , all_products=all_products)
+    return render_template("home.html" , all_products=all_products , all_category=all_category)
 
 
 @app.route('/log_in' , methods= ['POST' , 'GET'])

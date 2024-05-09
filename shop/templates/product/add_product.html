@@ -32,6 +32,16 @@
                   placeholder="In Rupees">
               </div>
               <div class="mb-3">
+                <label for="category">Category</label>
+                <select name="category" id="category" class="form-control form-control-lg" required>
+                  <option value=""> Select a category</option>
+                  {% for category in categories %}
+                  <option value="{{ category.id }}">{{ category.name }}</option>
+
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
                 <label for="price">Tags</label>
                 <input type="text" class="form-control form-control-lg" name="tags" 
                   placeholder="Enter your tags">
@@ -44,7 +54,7 @@
                 
 
             <div class="d-grid gap-3">
-              <button type="submit" class="btn btn-dark btn-lg rounded-1">Log In</button>
+              <button type="submit" class="btn btn-dark btn-lg rounded-1">Add</button>
             </div>
           </form>
         </div>
