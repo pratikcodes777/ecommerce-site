@@ -1,18 +1,7 @@
 {% extends 'base.html' %}
 {% block title %} Admin {% endblock %}
 {% block body %}
-<div class="container my-3">
-    <div class="row py-4 pb-0 pb-sm-4 align-items-center ">
-  
-      <div class="col-sm-4 col-lg-3 text-center text-sm-start">
-        <div class="main-logo">
-          <a href="{{url_for('admin_home')}}">
-            <img src="static/images/logo.png" alt="logo" class="img-fluid">
-          </a>
-        </div>
-      </div>
-    </div>
-</div>
+
 
 {% include 'admin/navbar.html' %}
 {% include '_messages.html' %}
@@ -41,5 +30,5 @@
         </table>
       </div>
 
-      {% include 'footer.html' %}
+      <!-- {% include 'footer.html' %} -->
 {% endblock %}

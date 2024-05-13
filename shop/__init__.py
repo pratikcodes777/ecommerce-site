@@ -1,10 +1,11 @@
-from flask import Flask
+from flask import Flask, url_for, flash, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_mail import Mail, Message
 import os
 from dotenv import load_dotenv
+from functools import wraps
 
 load_dotenv('info.env')
 
@@ -27,6 +28,16 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'log_in'
 mail = Mail(app)
 
+
+
+def admin_required(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if current_user.role != 'admin':
+            flash('Access Denied: You are not authorized to access admin page.')
+            return redirect(url_for('log_in'))
+        return func(*args, **kwargs)
+    return decorated_function
 
 
 

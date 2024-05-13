@@ -5,7 +5,7 @@
         <div class="col-sm-4 col-lg-3 text-center text-sm-start">
           <div class="main-logo">
             <a href="{{url_for('home')}}">
-              <img src="static/images/logo.png" alt="logo" class="img-fluid">
+              <img src="{{url_for('static' , filename='images/logo.png')}}" alt="logo" class="img-fluid">
             </a>
           </div>
         </div>
@@ -105,13 +105,28 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
 
-          <div class="offcanvas-body justify-content-between">
+          <div class="offcanvas-body justify-content-between"> 
+            <!-- <a href="#">
             <select class="filter-categories border-0 mb-0 me-5">
-              <option>Shop by Category</option>
+              <option disabled selected>Shop by Category</option>
               {% for category in all_category %}
-              <option>{{ category.name }}</option>
+             
+              <option value="{{ category.url }}">{{ category.name }}</option>
+             
               {% endfor %}
-            </select>
+            </select> </a> -->
+
+
+            <button type="button" class="btn btn-outline-warning dropdown-toggle btn-sm my-2" data-bs-toggle="dropdown" aria-expanded="false">
+              Select a category
+            </button>
+  
+          <ul class="dropdown-menu">
+              {% for category in all_category %}
+              <li><a class="dropdown-item" href="{{url_for('get_category' , id=category.id)}}">{{category.name}}</a></li>
+              {% endfor %}
+              
+          </ul>
 
             <ul class="navbar-nav menu-list list-unstyled d-flex gap-md-3 mb-0">
               <li class="nav-item">
@@ -156,7 +171,13 @@
                   </a>
                 </li>
               </ul>
-
+              {% if current_user.role == 'admin' %}
+              <ul class="navbar-nav ms-auto"> 
+                <li class="nav-item"> 
+                  <a class="nav-link" href="{{url_for('admin_home')}}"> <b><u>Admin Home</u></b></a> 
+                </li> 
+              </ul>
+              {% endif %}
             </div>
 
           </div>

@@ -14,6 +14,7 @@ from sqlalchemy import or_
 def home():
     all_products = Product.query.all()
     all_category = Category.query.all()
+    
     if request.method == "POST":
         email = request.form['email']
         password = request.form['password']

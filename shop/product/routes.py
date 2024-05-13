@@ -1,11 +1,12 @@
 from flask import Flask, url_for, redirect, render_template, request, flash, session
 from datetime import datetime, timedelta, timezone
 import base64
-from shop import app,db
+from shop import app,db, admin_required
 from .models import Product, Category
 
 
 @app.route('/add_products' , methods = ['GET', 'POST'])
+@admin_required
 def add_products():
     categories = Category.query.all()
     if request.method == 'POST':
@@ -27,6 +28,7 @@ def add_products():
 
 
 @app.route('/add_category' , methods = ["GET" , "POST"])
+@admin_required
 def add_category():
     if request.method == 'POST':
         category = request.form['category']
@@ -40,6 +42,7 @@ def add_category():
 
 
 @app.route('/update_products/<int:id>' , methods=['POST' , 'GET'])
+@admin_required
 def update_products(id):
     product_to_update = Product.query.get_or_404(id)
     categories = Category.query.all()
@@ -62,6 +65,7 @@ def update_products(id):
 
 
 @app.route('/delete_products/<int:id>')
+@admin_required
 def delete_products(id):
     product_to_delete = Product.query.get_or_404(id)
     db.session.delete(product_to_delete)
@@ -71,6 +75,7 @@ def delete_products(id):
 
 
 @app.route('/update_category/<int:id>' , methods=['POST' , 'GET'])
+@admin_required
 def update_category(id):
     category_to_update = Category.query.get_or_404(id)
     if request.method == 'POST':
@@ -83,6 +88,7 @@ def update_category(id):
 
 
 @app.route('/delete_category/<int:id>')
+@admin_required
 def delete_category(id):
     category_to_delete = Category.query.get_or_404(id)
     db.session.delete(category_to_delete)
@@ -90,3 +96,10 @@ def delete_category(id):
     flash("Category deleted successfully.")
     return redirect(url_for('categories'))
 
+
+@app.route('/get_category/<int:id>')
+def get_category(id):
+    all_category = Category.query.all()
+    category = Category.query.get_or_404(id)
+    categories = Product.query.filter_by(category_id=id)
+    return render_template('home.html' , categories=categories, all_category=all_category, category=category)

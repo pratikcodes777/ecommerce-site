@@ -5,12 +5,57 @@
 
 {% block body %}
 {% include 'navbar.html' %}
+{% include '_messages.html' %}
+
 <div class="container">
   <div class="row">
+
+{% if categories %}
+<h2>{{category.name}}</h2>
+
+{% for c in categories %}
+   
+  <div class="col-md-4 col-lg-3 my-4">
+    <div class="item cat">
+      <div class="card position-relative">
+        <a href="single-product.html"><img src="data:{{ c.mime_type }}; base64, {{ c.image_file }}" alt="thumbnail here" class="img-fluid rounded-4" alt="image"></a>
+        <div class="card-body p-0">
+          <a href="single-product.html">
+            <h3 class="card-title pt-4 m-0">{{ c.name }}</h3>
+          </a>
+          <div class="card-text">
+            <span class="rating secondary-font">
+              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
+              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
+              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
+              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
+              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
+              5.0
+            </span>
+            <h3 class="secondary-font text-primary">Rs.{{ c.price }}</h3>
+            <div class="d-flex flex-wrap mt-3">
+              <a href="#" class="btn-cart me-3 px-4 pt-3 pb-3">
+                <h5 class="text-uppercase m-0">Add to Cart</h5>
+              </a>
+              <a href="#" class="btn-wishlist px-4 pt-3 ">
+                <iconify-icon icon="fluent:heart-28-filled" class="fs-5"></iconify-icon>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+{% endfor %}
+
+{% else %}
 {% for product in all_products %}
 {% include 'card.html' %}
 
 {% endfor %}
+{% endif %}
 </div>
 </div>
 
@@ -21,7 +66,7 @@
 
       <div class="row my-5 py-5">
         <div class="offset-md-3 col-md-6 my-5 ">
-          {% include '_messages.html' %}
+          <!-- {% include '_messages.html' %} -->
           <h2 class="display-3 fw-normal text-center">Register Now!
           </h2>
           <form method="post">
@@ -46,9 +91,9 @@
       </div>
     </div>
   </section>
-{% endif %}
 
 {% include 'footer.html' %}
+{% endif %}
 
 {% endblock body %}
 
