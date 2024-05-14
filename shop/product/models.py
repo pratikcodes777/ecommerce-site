@@ -9,6 +9,7 @@ class Product(db.Model):
     image_file = db.Column(db.String(20), nullable=False, default = 'default.jpg')
     price = db.Column(db.Numeric(10,2) , nullable=False)
     tags = db.Column(db.String(200))
+    desc = db.Column(db.String(1000))
 
     category_id = db.Column(db.Integer , db.ForeignKey('category.id') , nullable=False)
     category = db.relationship('Category' , backref=db.backref('posts' , lazy=True))

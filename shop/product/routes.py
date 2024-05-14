@@ -18,8 +18,9 @@ def add_products():
         encoded_img = base64.b64encode(img_data).decode("utf-8")
         tags = request.form['tags']
         category = request.form['category']
+        desc = request.form['desc']
 
-        new_product = Product(name=name , image_file=encoded_img , price=price, tags=tags , category_id = category )
+        new_product = Product(name=name , image_file=encoded_img , price=price, tags=tags , category_id = category , desc=desc)
         db.session.add(new_product)
         db.session.commit()
         flash('Product added successfully.')
@@ -55,6 +56,7 @@ def update_products(id):
         product_to_update.image_file = encoded_image
         product_to_update.tags = request.form['tags']
         product_to_update.category_id = request.form['category']
+        product_to_update.desc = request.form['desc']
 
         db.session.commit()
         flash("Products Updated successfully.")
@@ -103,3 +105,9 @@ def get_category(id):
     category = Category.query.get_or_404(id)
     categories = Product.query.filter_by(category_id=id)
     return render_template('home.html' , categories=categories, all_category=all_category, category=category)
+
+
+@app.route('/expand_product/<int:product_id>')
+def expand_product(product_id):
+    product_to_expand = Product.query.get_or_404(product_id)
+    return render_template('product/expand_product.html' , product_to_expand=product_to_expand)

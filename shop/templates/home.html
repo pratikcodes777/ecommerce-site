@@ -20,7 +20,7 @@
       <div class="card position-relative">
         <a href="single-product.html"><img src="data:{{ c.mime_type }}; base64, {{ c.image_file }}" alt="thumbnail here" class="img-fluid rounded-4" alt="image"></a>
         <div class="card-body p-0">
-          <a href="single-product.html">
+          <a href="{{url_for('expand_product' , product_id =c.id)}}">
             <h3 class="card-title pt-4 m-0">{{ c.name }}</h3>
           </a>
           <div class="card-text">

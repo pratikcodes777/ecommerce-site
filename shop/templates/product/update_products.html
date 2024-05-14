@@ -7,7 +7,7 @@
     <div class="col-sm-4 col-lg-3 text-center text-sm-start">
       <div class="main-logo">
         <a href="{{url_for('admin_home')}}">
-            <img src="static/images/logo.png" alt="logo" class="img-fluid">
+            <img src="{{url_for('static', filename='images/logo.png')}}" alt="logo" class="img-fluid">
         </a>
       </div>
     </div>
@@ -46,6 +46,11 @@
 
                   {% endfor %}
                 </select>
+              </div>
+              <div class="mb-3">
+                <label for="desc">Description</label>
+                <textarea  class="form-control form-control-lg" name="desc" 
+                  placeholder="Description of the product" cols="30" rows="5"> {{product_to_update.desc}}</textarea>
               </div>
               <div class="mb-3">
                 <label for="price">Tags</label>
