@@ -1,5 +1,6 @@
 from shop import db,app
 from datetime import datetime
+from shop.user.models import User
 
 
 class Product(db.Model):
@@ -13,8 +14,18 @@ class Product(db.Model):
 
     category_id = db.Column(db.Integer , db.ForeignKey('category.id') , nullable=False)
     category = db.relationship('Category' , backref=db.backref('posts' , lazy=True))
+    user_id = db.Column(db.Integer , db.ForeignKey('user.id') , nullable = False)
+    likes = db.relationship('Likes', backref='product', lazy=True)
+
 
 
 class Category(db.Model):
     id = db.Column(db.Integer , primary_key = True)
     name = db.Column(db.String(20) , nullable = False , unique = True)
+
+
+
+class Likes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)

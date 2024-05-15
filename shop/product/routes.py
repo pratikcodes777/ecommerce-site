@@ -1,8 +1,10 @@
-from flask import Flask, url_for, redirect, render_template, request, flash, session
+from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify
+from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 import base64
 from shop import app,db, admin_required
 from .models import Product, Category
+from shop.product.models import Likes
 
 
 @app.route('/add_products' , methods = ['GET', 'POST'])
@@ -20,7 +22,7 @@ def add_products():
         category = request.form['category']
         desc = request.form['desc']
 
-        new_product = Product(name=name , image_file=encoded_img , price=price, tags=tags , category_id = category , desc=desc)
+        new_product = Product(name=name , image_file=encoded_img , price=price, tags=tags , category_id = category , desc=desc , user_id=current_user.id)
         db.session.add(new_product)
         db.session.commit()
         flash('Product added successfully.')
@@ -111,3 +113,18 @@ def get_category(id):
 def expand_product(product_id):
     product_to_expand = Product.query.get_or_404(product_id)
     return render_template('product/expand_product.html' , product_to_expand=product_to_expand)
+
+
+@app.route('/like/<int:id>', methods=['POST'])
+def like(id):
+    existing_like = Likes.query.filter_by(product_id=id, user_id=current_user.id).first()
+    if existing_like:
+        db.session.delete(existing_like)
+        liked = False
+    else:
+        new_like = Likes(product_id=id, user_id=current_user.id)
+        db.session.add(new_like)
+        liked = True
+    db.session.commit()
+    
+    return jsonify({'liked': liked})
