@@ -68,7 +68,7 @@
               </a>
             </li>
             <li>
-              <a href="wishlist.html" class="mx-3">
+              <a href="{{url_for('liked_products')}}" class="mx-3">
                 <iconify-icon icon="mdi:heart" class="fs-4"></iconify-icon>
               </a>
             </li>
@@ -156,28 +156,23 @@
                   </a>
                 </li>
                 <li>
-                  <a href="wishlist.html" class="mx-3">
+                  <a href="{{url_for('liked_products')}}" class="mx-3">
                     <iconify-icon icon="mdi:heart" class="fs-4"></iconify-icon>
                   </a>
                 </li>
 
-                <li class="">
-                  <a href="#" class="mx-3" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCart"
-                    aria-controls="offcanvasCart">
-                    <iconify-icon icon="mdi:cart" class="fs-4 position-relative"></iconify-icon>
-                    <span class="position-absolute translate-middle badge rounded-circle bg-primary pt-2">
-                      03
-                    </span>
-                  </a>
-                </li>
+                  
+        {% if current_user.is_authenticated %}
+        <li class="nav-item mx-2" id="items"> 
+          <a href="{{url_for('show_cart')}}" class="nav-link text-grey">
+        <iconify-icon icon="mdi:cart" class="fs-4 position-relative"></iconify-icon><span class="position-absolute translate-middle badge rounded-circle bg-primary pt-2">
+          {{cart | length}}
+        </span>
+      </a>
+    </li>
+    {% endif %}
               </ul>
-              {% if current_user.role == 'admin' %}
-              <ul class="navbar-nav ms-auto"> 
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{{url_for('admin_home')}}"> <b><u>Admin Home</u></b></a> 
-                </li> 
-              </ul>
-              {% endif %}
+             
             </div>
 
           </div>

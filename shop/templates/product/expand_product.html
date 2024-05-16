@@ -38,24 +38,23 @@
                     <a href="#" class="btn-cart me-3 px-4 pt-3 pb-3">
                       <h5 class="text-uppercase m-0">Add to Cart</h5>
                     </a>
-                     {% if current_user.is_authenticated %}
                     <div style="border: 1px solid rgb(212, 212, 212); padding: 5px;  ">
-               
-                     
-                      <button class="btn-cart px-4 pt-3"
-                        id="like-btn-{{ product_to_expand.id }}"
-                        type="button"
-                        class="like-btn"
-                        style="border: none; background: none; cursor: pointer; margin-top: -5px;" 
-                        onclick="likePost({{ product_to_expand.id }})"
-                      >
+
+                      <span id="like-count-{{ product_to_expand.id }}"
+                      >{{ product_to_expand.count_likes() }}</span> {% if current_user.is_anonymous %} liked {% endif %}
+                      {% if current_user.is_authenticated %}
+                      <button class="btn-cart px-4 pt-3" id="like-btn-{{ product_to_expand.id }}" type="button" class="like-btn"
+                        style="border: none; background: none; cursor: pointer; margin-top: -5px;"
+                        onclick="likePost({{ product_to_expand.id }})">
                         {% if current_user.id in product_to_expand.likes|map(attribute='user_id')|list
                         %}
                         <i class="fa-solid fa-thumbs-up fa-lg"></i>
                         {% else %}
                         <i class="fa-regular fa-thumbs-up fa-lg"></i>
                         {% endif %}
-                    </a>
+                        </a> 
+                        
+                      </button>
                       {% endif %}
                     </div>
                     

@@ -1,11 +1,11 @@
-from flask import Flask, url_for, redirect, render_template, request, flash, session
+from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify
 import random
 from datetime import datetime, timedelta, timezone
 from shop import app, bcrypt, db, mail
-from flask_login import login_user, current_user, logout_user
+from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 from .models import User
-from shop.product.models import Product, Category
+from shop.product.models import Product, Category, Cart
 from sqlalchemy import or_
 
 
@@ -14,6 +14,9 @@ from sqlalchemy import or_
 def home():
     all_products = Product.query.all()
     all_category = Category.query.all()
+    cart = []
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_link=current_user.id).all()
     
     if request.method == "POST":
         email = request.form['email']
@@ -33,7 +36,7 @@ def home():
         else:
             flash("Email already exists.")
 
-    return render_template("home.html" , all_products=all_products , all_category=all_category)
+    return render_template("home.html" , all_products=all_products , all_category=all_category , cart=cart)
 
 
 @app.route('/log_in' , methods= ['POST' , 'GET'])
@@ -135,3 +138,5 @@ def search():
         search_results = Product.query.filter(or_(Product.name.like(f"%{search_query}%"), Product.tags.like(f"%{search_query}%"))).all()
 
         return render_template('user/search_results.html', search_results=search_results , search_query=search_query)
+    
+

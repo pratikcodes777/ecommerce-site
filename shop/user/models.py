@@ -14,6 +14,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60) , nullable=False)
     role = db.Column(db.String(20) , nullable=False , default='customer')
 
+    cart_items = db.relationship('Cart', backref=db.backref('user', lazy=True))
+
 
 
 
