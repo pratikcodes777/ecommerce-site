@@ -1,5 +1,5 @@
 from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify
-import random
+import random, base64
 from datetime import datetime, timedelta, timezone
 from shop import app, bcrypt, db, mail
 from flask_login import login_user, current_user, logout_user, login_required
@@ -22,11 +22,12 @@ def home():
         email = request.form['email']
         password = request.form['password']
         repassword = request.form['repassword']
+        uname = request.form['uname']
         hashed_password = bcrypt.generate_password_hash(password)
         existing_email = User.query.filter_by(email=email).first()
         if not existing_email:
             if password == repassword:
-                new_user = User(email=email , password=hashed_password)
+                new_user = User(email=email , password=hashed_password , username=uname)
                 db.session.add(new_user)
                 db.session.commit()
                 flash("User created! Login to Continue.")
@@ -140,3 +141,44 @@ def search():
         return render_template('user/search_results.html', search_results=search_results , search_query=search_query)
     
 
+
+
+@app.route('/profile' , methods = ["POST", "GET"])
+@login_required
+def profile():
+    if request.method =='POST':
+        image = request.files['img']   
+        img_data = image.read()
+        encoded_img = base64.b64encode(img_data).decode('utf-8')
+        current_user.image_file = encoded_img
+        current_user.email = request.form["email"]
+        db.session.commit()
+        flash("Account updated successfully.")
+
+    return render_template('user/profile.html')
+
+
+@app.route("/change_pw" , methods=['POST', 'GET'])
+@login_required
+def change_pw():
+    if request.method == 'POST':
+        old_password = request.form['old_password']
+        new_password = request.form['new_password']
+        re_password = request.form['re_password']
+        if bcrypt.check_password_hash(current_user.password, old_password):             
+                if old_password != new_password:
+                    if new_password==re_password:
+                        hashed_password = bcrypt.generate_password_hash(new_password)
+                        current_user.password = hashed_password
+                        db.session.commit()
+                        flash("Password changed successfully.")
+                        log_out()
+                        return redirect (url_for('log_in'))
+                    else:
+                        flash("The passwords didn't matched.")
+                else:
+                    flash("New password cannot be same as old password.")
+        else:
+            flash("Old password is incorrect.")
+ 
+    return render_template('user/change_pw.html')

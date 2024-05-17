@@ -19,74 +19,78 @@
 
 
   
-  $('.plus-cart').click(function(){
-    console.log('Button clicked')
-  
-    var id = $(this).attr('pid').toString()
-    var quantity = this.parentNode.children[2]
-  
-    $.ajax({
-        type: 'GET',
-        url: '/pluscart',
-        data: {
-            cart_id: id
-        },
+  document.querySelectorAll('.plus-cart').forEach(button => {
+    button.addEventListener('click', function() {
+        console.log('Button clicked');
         
-        success: function(data){
-            console.log(data)
-            quantity.innerText = data.quantity
-            document.getElementById(`quantity${id}`).innerText = data.quantity
-            document.getElementById('amount_tt').innerText = data.amount
-            document.getElementById('totalamount').innerText = data.total
-  
-        }
-    })
-  })
-  
-  
-  $('.minus-cart').click(function(){
-    console.log('Button clicked')
-  
-    var id = $(this).attr('pid').toString()
-    var quantity = this.parentNode.children[2]
-  
-    $.ajax({
-        type: 'GET',
-        url: '/minuscart',
-        data: {
-            cart_id: id
-        },
+        const id = this.getAttribute('pid').toString();
+        const quantity = this.parentNode.children[2];
         
-        success: function(data){
-            console.log(data)
-            quantity.innerText = data.quantity
-            document.getElementById(`quantity${id}`).innerText = data.quantity
-            document.getElementById('amount_tt').innerText = data.amount
-            document.getElementById('totalamount').innerText = data.total
-  
-        }
-    })
-  })
+        fetch(`/pluscart?cart_id=${id}`, {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            quantity.innerText = data.quantity;
+            document.getElementById(`quantity${id}`).innerText = data.quantity;
+            document.getElementById('amount_tt').innerText = data.amount;
+            document.getElementById('totalamount').innerText = data.total;
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
 
-$('.remove-cart').click(function(){
+  
+document.querySelectorAll('.minus-cart').forEach(button => {
+  button.addEventListener('click', function() {
+      console.log('Button clicked');
+
+      const id = this.getAttribute('pid').toString();
+      const quantityElement = this.parentNode.children[2];
+      const currentQuantity = parseInt(quantityElement.innerText);
+
+      if (currentQuantity <= 1) {
+          console.log('Quantity cannot be less than 1');
+          return;
+      }
+
+      fetch(`/minuscart?cart_id=${id}`, {
+          method: 'GET'
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log(data);
+          quantityElement.innerText = data.quantity;
+          document.getElementById(`quantity${id}`).innerText = data.quantity;
+          document.getElementById('amount_tt').innerText = data.amount;
+          document.getElementById('totalamount').innerText = data.total;
+      })
+      .catch(error => console.error('Error:', error));
+  });
+});
+
+
+
+// $('.remove-cart').click(function(){
     
-    var id = $(this).attr('pid').toString()
+//     var id = $(this).attr('pid').toString()
 
-    var to_remove = this.parentNode.parentNode.parentNode.parentNode
+//     var to_remove = this.parentNode.parentNode.parentNode.parentNode
 
-    $.ajax({
-        type: 'GET',
-        url: '/removecart',
-        data: {
-            cart_id: id
-        },
+//     $.ajax({
+//         type: 'GET',
+//         url: '/removecart',
+//         data: {
+//             cart_id: id
+//         },
 
-        success: function(data){
-            document.getElementById('amount_tt').innerText = data.amount
-            document.getElementById('totalamount').innerText = data.total
-            to_remove.remove()
-        }
-    })
+//         success: function(data){
+//             document.getElementById('amount_tt').innerText = data.amount
+//             document.getElementById('totalamount').innerText = data.total
+//             to_remove.remove()
+//         }
+//     })
 
 
-})
+// })

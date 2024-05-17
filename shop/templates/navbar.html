@@ -151,7 +151,7 @@
             <div class="d-none d-lg-flex align-items-end">
               <ul class="d-flex justify-content-end list-unstyled m-0">
                 <li>
-                  <a href="{{url_for('log_in')}}" class="mx-3">
+                  <a href="{{url_for('profile')}}" class="mx-3">
                     <iconify-icon icon="healthicons:person" class="fs-4"></iconify-icon>
                   </a>
                 </li>
@@ -173,6 +173,14 @@
     {% endif %}
               </ul>
              
+              {% if current_user.role == 'admin' %}
+              <ul class="navbar-nav menu-list list-unstyled d-flex gap-md-3 mb-0">
+                <li class="nav-item">
+                  <a href="{{url_for('admin_home')}}" class="nav-link"><b><u>Admin Home</u></b></a>
+                </li>
+              </ul>
+              {% endif %}
+
             </div>
 
           </div>
