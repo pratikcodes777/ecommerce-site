@@ -2,7 +2,7 @@ from flask import Flask, url_for, redirect, render_template, request, flash, ses
 from flask_login import login_required, login_user, current_user
 
 from shop.user.models import User
-from shop.product.models import Product, Category
+from shop.product.models import Product, Category,Order
 
 from shop import db,app, bcrypt,admin_required
 
@@ -53,3 +53,36 @@ def delete_user(id):
     db.session.commit()
     flash('User deleted successfully')
     return redirect(url_for('view_users'))
+
+
+@app.route('/view-orders')
+@admin_required
+def view_orders():
+    orders = Order.query.all()
+    return render_template('admin/orders.html', orders=orders)
+
+
+@app.route('/update-order/<int:order_id>', methods=['GET', 'POST'])
+@admin_required
+def update_order(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if request.method == 'POST':
+        status = request.form.get('order_status')
+
+        if status:  
+            order.status = status
+
+            try:
+                db.session.commit()
+                flash(f'Order {order_id} updated successfully.', 'success')
+                return redirect('/view-orders')
+            except Exception as e:
+                print(e)
+                flash(f'Error updating order {order_id}.', 'danger')
+                return redirect('/view-orders')
+        else:
+            flash('Invalid form data.', 'danger')
+            return redirect('/update-order/{order_id}')
+
+    return render_template('admin/update_order.html',  order=order )

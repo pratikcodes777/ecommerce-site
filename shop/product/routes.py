@@ -1,11 +1,14 @@
-from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify
+from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify, send_from_directory,abort, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 import base64
 from shop import app,db, admin_required
 from .models import Product, Category
-from shop.product.models import Likes, Cart
+from shop.product.models import Likes, Cart,Order
 from shop.user.models import User
+from fpdf import FPDF
+import os
+
 
 
 @app.route('/add_products' , methods = ['GET', 'POST'])
@@ -258,3 +261,104 @@ def remove_cart(id):
     db.session.commit()
     flash('Cart deleted successfully')
     return redirect(url_for('show_cart'))
+
+
+# @app.route('/place-order')
+# @login_required
+# def place_order():
+#     cart_items = Cart.query.filter_by(user_link=current_user.id).all()
+#     for item in cart_items:
+#         new_order = Order(
+#             quantity=item.quantity,
+#             price=item.product.price * item.quantity,
+#             user_link=current_user.id,
+#             product_link=item.product.id
+#         )
+#         new_order.generate_invoice()  # Generate invoice for the order
+#         db.session.add(new_order)
+#         db.session.delete(item)  # Remove item from cart after placing order
+#     db.session.commit()
+#     flash('Order placed successfully. Status is Pending.')
+#     return redirect(url_for('show_cart'))
+
+
+
+
+@app.route('/place-order')
+@login_required
+def place_order():
+    cart_items = Cart.query.filter_by(user_link=current_user.id).all()
+    orders = []
+    for item in cart_items:
+        new_order = Order(
+            quantity=item.quantity,
+            price=float(item.product.price) * item.quantity,
+            user_link=current_user.id,
+            product_link=item.product.id
+        )
+        new_order.generate_invoice()
+        db.session.add(new_order)
+        orders.append(new_order)
+        db.session.delete(item)  # Remove item from cart after placing order
+    db.session.commit()
+
+    pdf_filename = generate_invoice_pdf(orders)
+    flash('Order placed successfully. Status is Pending.')
+    return redirect(url_for('serve_invoice', filename=pdf_filename))
+
+
+
+def generate_invoice_pdf(orders):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    for order in orders:
+        user = User.query.get(order.user_link)
+        product = Product.query.get(order.product_link)
+        pdf.cell(200, 10, txt=f"Order ID: {order.id}", ln=True)
+        pdf.cell(200, 10, txt=f"User: {user.username}", ln=True)
+        pdf.cell(200, 10, txt=f"Product: {product.name}", ln=True)
+        pdf.cell(200, 10, txt=f"Quantity: {order.quantity}", ln=True)
+        pdf.cell(200, 10, txt=f"Price per item: {order.price / order.quantity:.2f}", ln=True)
+        pdf.cell(200, 10, txt=f"Total Price: {order.price:.2f}", ln=True)
+        pdf.cell(200, 10, txt=f"Status: {order.status}", ln=True)
+        pdf.cell(200, 10, txt=" ", ln=True)
+
+    invoice_dir = os.path.join(current_app.root_path, 'static', 'invoices')
+    if not os.path.exists(invoice_dir):
+        os.makedirs(invoice_dir)
+
+    pdf_filename = f'invoice_{current_user.id}.pdf'
+    pdf_path = os.path.join(invoice_dir, pdf_filename)
+    pdf.output(pdf_path)
+
+    return pdf_filename
+
+
+@app.route('/orders')
+@login_required
+def order():
+    orders = Order.query.filter_by(user_link=current_user.id).all()
+    return render_template('product/orders.html', orders=orders)
+
+
+
+@app.route('/show-invoice')
+@login_required
+def show_invoice():
+    pdf_filename = request.args.get('pdf_filename')
+    if not pdf_filename:
+        flash('Invoice not found.', 'danger')
+        return redirect(url_for('show_cart'))
+    return render_template('product/show_invoice.html', pdf_filename=pdf_filename)
+
+
+
+@app.route('/invoices/<filename>')
+@login_required
+def serve_invoice(filename):
+    try:
+        return send_from_directory(os.path.join(current_app.root_path, 'static', 'invoices'), filename)
+    except FileNotFoundError:
+        abort(404)
