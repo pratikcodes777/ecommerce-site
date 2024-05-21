@@ -1,6 +1,6 @@
 from flask import Flask, url_for, redirect, render_template, request, flash, session
 from flask_login import login_required, login_user, current_user
-
+from sqlalchemy import desc
 from shop.user.models import User
 from shop.product.models import Product, Category,Order
 
@@ -58,7 +58,7 @@ def delete_user(id):
 @app.route('/view-orders')
 @admin_required
 def view_orders():
-    orders = Order.query.all()
+    orders = Order.query.order_by(desc(Order.id))
     return render_template('admin/orders.html', orders=orders)
 
 

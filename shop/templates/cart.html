@@ -19,7 +19,7 @@
 
  
     <div class="row">
-        
+        {% include '_messages.html' %}
 
        
         {% if cart %}
@@ -100,7 +100,7 @@
 
         {% else %}
 
-        <h1 class="text-center mb-5" style="color: white;">Your Cart is Empty</h1>
+        <h1 class="text-center mb-5" style="color: rgb(0, 0, 0);">Your Cart is Empty</h1>
 
         {% endif %}
     </div>

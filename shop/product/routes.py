@@ -8,7 +8,9 @@ from shop.product.models import Likes, Cart,Order
 from shop.user.models import User
 from fpdf import FPDF
 import os
-
+import string
+from sqlalchemy import desc
+import random
 
 
 @app.route('/add_products' , methods = ['GET', 'POST'])
@@ -229,6 +231,7 @@ def plus_cart():
         return jsonify(data)
 
 
+
 @app.route('/minuscart')
 @login_required
 def minus_cart():
@@ -283,7 +286,6 @@ def remove_cart(id):
 
 
 
-
 @app.route('/place-order')
 @login_required
 def place_order():
@@ -299,13 +301,18 @@ def place_order():
         new_order.generate_invoice()
         db.session.add(new_order)
         orders.append(new_order)
-        db.session.delete(item)  # Remove item from cart after placing order
+        db.session.delete(item)  
     db.session.commit()
 
     pdf_filename = generate_invoice_pdf(orders)
     flash('Order placed successfully. Status is Pending.')
-    return redirect(url_for('serve_invoice', filename=pdf_filename))
+    return redirect(url_for('show_invoice', pdf_filename=pdf_filename))
 
+
+
+def generate_invoice_number(length=8):
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 def generate_invoice_pdf(orders):
@@ -313,33 +320,60 @@ def generate_invoice_pdf(orders):
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
+    user = User.query.get(orders[0].user_link)
+    invoice_number = generate_invoice_number()
+
+    # User details and invoice number
+    pdf.cell(200, 10, txt=f"Invoice Number: #{invoice_number}", ln=True)
+    pdf.cell(200, 10, txt=f"Customer Name: {user.username}", ln=True)
+    pdf.cell(200, 10, txt=f"Customer Email: {user.email}", ln=True)
+    pdf.cell(200, 10, txt=" ", ln=True)
+
+    # Table headers
+    pdf.set_font("Arial", 'B', size=12)
+    pdf.cell(40, 10, txt="Order ID", border=1, align="C")
+    pdf.cell(60, 10, txt="Product", border=1, align="C")
+    pdf.cell(20, 10, txt="Quantity", border=1, align="C")
+    pdf.cell(40, 10, txt="Price per item", border=1, align="C")
+    pdf.cell(40, 10, txt="Total Price", border=1, align="C")
+    pdf.ln()
+
+    pdf.set_font("Arial", size=12)
+    grand_total = 0
+
     for order in orders:
-        user = User.query.get(order.user_link)
         product = Product.query.get(order.product_link)
-        pdf.cell(200, 10, txt=f"Order ID: {order.id}", ln=True)
-        pdf.cell(200, 10, txt=f"User: {user.username}", ln=True)
-        pdf.cell(200, 10, txt=f"Product: {product.name}", ln=True)
-        pdf.cell(200, 10, txt=f"Quantity: {order.quantity}", ln=True)
-        pdf.cell(200, 10, txt=f"Price per item: {order.price / order.quantity:.2f}", ln=True)
-        pdf.cell(200, 10, txt=f"Total Price: {order.price:.2f}", ln=True)
-        pdf.cell(200, 10, txt=f"Status: {order.status}", ln=True)
-        pdf.cell(200, 10, txt=" ", ln=True)
+        total_price = order.price
+        grand_total += total_price
+
+        pdf.cell(40, 10, txt=f"{order.id}", border=1, align="C")
+        pdf.cell(60, 10, txt=f"{product.name}", border=1, align="C")
+        pdf.cell(20, 10, txt=f"{order.quantity}", border=1, align="C")
+        pdf.cell(40, 10, txt=f"{order.price / order.quantity:.2f}", border=1, align="C")
+        pdf.cell(40, 10, txt=f"{total_price:.2f}", border=1, align="C")
+        pdf.ln()
+
+    # Grand total
+    pdf.cell(160, 10, txt="Grand Total", border=1, align="C")
+    pdf.cell(40, 10, txt=f"{grand_total:.2f}", border=1, align="C")
+    pdf.ln()
 
     invoice_dir = os.path.join(current_app.root_path, 'static', 'invoices')
     if not os.path.exists(invoice_dir):
         os.makedirs(invoice_dir)
 
-    pdf_filename = f'invoice_{current_user.id}.pdf'
+    pdf_filename = f'invoice_{current_user.id}_{invoice_number}.pdf'
     pdf_path = os.path.join(invoice_dir, pdf_filename)
     pdf.output(pdf_path)
 
     return pdf_filename
 
 
+
 @app.route('/orders')
 @login_required
 def order():
-    orders = Order.query.filter_by(user_link=current_user.id).all()
+    orders = Order.query.filter_by(user_link=current_user.id).order_by(desc(Order.id)).all()
     return render_template('product/orders.html', orders=orders)
 
 
@@ -362,3 +396,29 @@ def serve_invoice(filename):
         return send_from_directory(os.path.join(current_app.root_path, 'static', 'invoices'), filename)
     except FileNotFoundError:
         abort(404)
+
+
+
+# @app.route('/purchased-products')
+# @login_required
+# def purchased_products():
+#     accepted_orders = Order.query.filter_by(user_link=current_user.id, status='Delivered').all()
+#     return render_template('user/purchased_products.html', orders=accepted_orders)
+
+
+@app.route('/purchased-products')
+@login_required
+def purchased_products():
+    # Fetch all delivered orders for the current user
+    all_orders = Order.query.filter_by(user_link=current_user.id, status='Delivered').all()
+    
+    # Use a dictionary to store unique products
+    unique_products = {}
+    for order in all_orders:
+        if order.product_link not in unique_products:
+            unique_products[order.product_link] = order
+    
+    # Convert the dictionary values to a list
+    unique_orders = list(unique_products.values())
+
+    return render_template('user/purchased_products.html', orders=unique_orders)
