@@ -40,13 +40,12 @@
               <div class="mb-3">
                 <label for="category">Category</label>
                 <select name="category" id="category" class="form-control form-control-lg" required>
-                  <option value=""> Select a category</option>
-                  {% for category in categories %}
-                  <option value="{{ category.id }}">{{ category.name }}</option>
-
-                  {% endfor %}
+                    <option value="">Select a category</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == product_to_update.category_id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
                 </select>
-              </div>
+            </div>
               <div class="mb-3">
                 <label for="desc">Description</label>
                 <textarea  class="form-control form-control-lg" name="desc" 

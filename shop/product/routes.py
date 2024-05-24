@@ -9,7 +9,7 @@ from shop.user.models import User
 from fpdf import FPDF
 import os
 import string
-from sqlalchemy import desc
+from sqlalchemy import desc, or_, func, extract
 import random
 
 
@@ -78,6 +78,8 @@ def update_products(id):
 @admin_required
 def delete_products(id):
     product_to_delete = Product.query.get_or_404(id)
+
+
     db.session.delete(product_to_delete)
     db.session.commit()
     flash("Product deleted successfully.")
@@ -101,10 +103,17 @@ def update_category(id):
 @admin_required
 def delete_category(id):
     category_to_delete = Category.query.get_or_404(id)
+    if category_to_delete:
+        products = Product.query.filter_by(category_id=id).all()
+        for product in products:
+            product.category_id = None  
+            db.session.commit()
     db.session.delete(category_to_delete)
     db.session.commit()
     flash("Category deleted successfully.")
     return redirect(url_for('categories'))
+
+
 
 
 @app.route('/get_category/<int:id>')
@@ -315,6 +324,8 @@ def generate_invoice_number(length=8):
     return ''.join(random.choice(characters) for _ in range(length))
 
 
+
+
 def generate_invoice_pdf(orders):
     pdf = FPDF()
     pdf.add_page()
@@ -331,7 +342,7 @@ def generate_invoice_pdf(orders):
 
     # Table headers
     pdf.set_font("Arial", 'B', size=12)
-    pdf.cell(40, 10, txt="Order ID", border=1, align="C")
+    pdf.cell(40, 10, txt="S.N.", border=1, align="C")
     pdf.cell(60, 10, txt="Product", border=1, align="C")
     pdf.cell(20, 10, txt="Quantity", border=1, align="C")
     pdf.cell(40, 10, txt="Price per item", border=1, align="C")
@@ -340,18 +351,21 @@ def generate_invoice_pdf(orders):
 
     pdf.set_font("Arial", size=12)
     grand_total = 0
+    counter = 1
 
     for order in orders:
         product = Product.query.get(order.product_link)
         total_price = order.price
         grand_total += total_price
 
-        pdf.cell(40, 10, txt=f"{order.id}", border=1, align="C")
+        pdf.cell(40, 10, txt=f"{counter}", border=1, align="C")
         pdf.cell(60, 10, txt=f"{product.name}", border=1, align="C")
         pdf.cell(20, 10, txt=f"{order.quantity}", border=1, align="C")
         pdf.cell(40, 10, txt=f"{order.price / order.quantity:.2f}", border=1, align="C")
         pdf.cell(40, 10, txt=f"{total_price:.2f}", border=1, align="C")
         pdf.ln()
+
+        counter += 1
 
     # Grand total
     pdf.cell(160, 10, txt="Grand Total", border=1, align="C")
@@ -399,11 +413,12 @@ def serve_invoice(filename):
 
 
 
-# @app.route('/purchased-products')
-# @login_required
-# def purchased_products():
-#     accepted_orders = Order.query.filter_by(user_link=current_user.id, status='Delivered').all()
-#     return render_template('user/purchased_products.html', orders=accepted_orders)
+@app.route('/purchase-history')
+@login_required
+def purchase_history():
+    accepted_orders = Order.query.filter_by(user_link=current_user.id, status='Delivered').all()
+    return render_template('user/purchase_history.html', orders=accepted_orders)
+
 
 
 @app.route('/purchased-products')

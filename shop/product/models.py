@@ -12,13 +12,14 @@ class Product(db.Model):
     tags = db.Column(db.String(200))
     desc = db.Column(db.String(1000))
 
-    category_id = db.Column(db.Integer , db.ForeignKey('category.id') , nullable=False)
-    category = db.relationship('Category' , backref=db.backref('posts' , lazy=True))
+    category_id = db.Column(db.Integer , db.ForeignKey('category.id'))
+    category = db.relationship('Category', backref=db.backref('associated_products', lazy=True))
+    
     user_id = db.Column(db.Integer , db.ForeignKey('user.id') , nullable = False)
-    likes = db.relationship('Likes', backref='product', lazy=True)
+    likes = db.relationship('Likes', backref='product', lazy=True , cascade='all, delete-orphan')
 
-    carts = db.relationship('Cart', backref=db.backref('product', lazy=True))
-    orders = db.relationship('Order', backref=db.backref('ordered_product', lazy=True))
+    carts = db.relationship('Cart', backref=db.backref('product', lazy=True), cascade= 'all, delete-orphan', single_parent=True)
+    orders = db.relationship('Order', backref=db.backref('ordered_product', lazy=True), cascade= 'all, delete-orphan', single_parent=True)
 
 
     def count_likes(self):
@@ -29,6 +30,8 @@ class Product(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer , primary_key = True)
     name = db.Column(db.String(20) , nullable = False , unique = True)
+
+    
 
 
 
@@ -56,7 +59,7 @@ class Order(db.Model):
     user_link = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     product_link = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
 
-    user = db.relationship('User', backref='user_orders')
+    user = db.relationship('User', backref='orders')
     product = db.relationship('Product', backref='ordered_in_orders')
 
     def generate_invoice(self):

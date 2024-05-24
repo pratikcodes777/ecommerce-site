@@ -16,7 +16,30 @@ class User(db.Model, UserMixin):
     image_file = db.Column(db.String(20), nullable=False, default = 'default.png')
     role = db.Column(db.String(20) , nullable=False , default='customer')
 
-    cart_items = db.relationship('Cart', backref=db.backref('user', lazy=True))
+    likes = db.relationship('Likes', backref='user', cascade='all, delete-orphan')
+    cart_items = db.relationship('Cart', backref=db.backref('user', lazy=True), cascade='all, delete-orphan')
+    user_orders = db.relationship('Order', back_populates='user', cascade='all, delete-orphan')
+
+    def delete(self):
+        for like in self.likes:
+            db.session.delete(like)
+
+            
+        # Delete associated orders
+        for order in self.user_orders:
+            db.session.delete(order)
+
+        # Delete associated cart items
+        for cart_item in self.cart_items:
+            db.session.delete(cart_item)
+
+        # Delete the user
+        db.session.delete(self)
+        db.session.commit()
+
+
+
+   
 
 
 
