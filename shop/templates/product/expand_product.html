@@ -23,16 +23,27 @@
                 <hr>
                 <p>Product Price: {{product_to_expand.price}}</p>
                 <b><i>{{product_to_expand.desc}}</i></b> <br> 
-                <p style="color: rgb(224, 7, 156);">Tags : <i>{{product_to_expand.tags}}</i></p>
+                Tags:
+                    {% for tag in product_to_expand.tags.split(',') %}
+                        <span class="badge rounded-pill text-bg-primary">{{ tag.strip() }}</span>
+                    {% endfor %}
                  <hr>
-               <h5>Rating: <span class="rating secondary-font">
-                    <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-                    <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-                    <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-                    <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-                    <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-                    5.0
-                  </span></h5>
+                 <div class="card-text">
+                  <span id="rating-stars-{{ product_to_expand.id }}">
+                    {% set rating = product_to_expand.average_rating() %}
+                    {% for i in range(1, 6) %}
+                    <button type="button" class="star" style="border: none; background: none; cursor: pointer;" onclick="rateProduct({{ product_to_expand.id }}, {{ i }})">
+                      {% if i <= rating %}
+                        <i class="fa fa-star text-primary"></i>
+                      {% elif i - 0.5 <= rating %}
+                        <i class="fa fa-star-half-alt text-primary"></i>
+                      {% else %}
+                        <i class="fa fa-star text-muted"></i>
+                      {% endif %}
+                    </button>
+                    {% endfor %}          
+                    <span id="rating-value-{{ product_to_expand.id }}">{{ rating }}</span>
+                  </span>
 
                   <div class="d-flex flex-wrap mt-3">
                     <a href="{{url_for('add_to_cart' , item_id = product_to_expand.id)}}" class="btn-cart me-3 px-4 pt-3 pb-3">
@@ -67,6 +78,8 @@
            
         </div>
     </div>
+
+
 
 
     {% endblock body %}

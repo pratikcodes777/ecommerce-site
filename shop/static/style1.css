@@ -21,3 +21,15 @@
     background-color: #e1ff20; 
 }
 
+
+.star {
+    font-size: 1.5rem;
+    color: lightgray;
+    cursor: pointer;
+}
+
+.star.filled {
+    color: gold;
+}
+
+

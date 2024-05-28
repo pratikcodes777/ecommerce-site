@@ -3,7 +3,18 @@
 {% block title %}Purchased Products{% endblock %}
 
 {% block body %}
+<div class="container my-3">
+<div class="row py-4 pb-0 pb-sm-4 align-items-center ">
+<div class="col-sm-4 col-lg-3 text-center text-sm-start">
+    <div class="main-logo">
+      <a href="{{url_for('home')}}">
+        <img src="static/images/logo.png" alt="logo" class="img-fluid">
+      </a>
+    </div>
+  </div>
+
 <div class="container mt-5">
+    {% include '_messages.html' %}
     <h1 class="text-center">Purchased Products</h1>
 
     {% if orders %}
@@ -19,6 +30,13 @@
                     <p class="card-text">Price: Rs.{{ order.price }}</p>
                     <p class="card-text">Order Status: {{ order.status }}</p>
                 </div>
+
+                <!-- <p>{{ url_for('add_to_cart', item_id=order.product_link) }}</p> -->
+                <form action="{{ url_for('add_to_cart', item_id=order.product_link) }}" method="post">
+                    <button type="submit" class="btn btn-info" style="width: 125px;">Buy Again</button>
+                </form>
+
+                
             </div>
         </div>
         {% endfor %}
@@ -28,3 +46,4 @@
     {% endif %}
 </div>
 {% endblock %}
+

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import base64
 from shop import app,db, admin_required
 from .models import Product, Category
-from shop.product.models import Likes, Cart,Order
+from shop.product.models import Likes, Cart,Order,Rating
 from shop.user.models import User
 from fpdf import FPDF
 import os
@@ -170,34 +170,35 @@ def liked_products():
 
 
 
-@app.route('/add-to-cart/<int:item_id>')
+@app.route('/add-to-cart/<int:item_id>', methods=['POST' , 'GET'])
 @login_required
 def add_to_cart(item_id):
-    item_to_add = Product.query.get(item_id)
+    item_to_add = Product.query.get_or_404(item_id)  
     item_exists = Cart.query.filter_by(product_link=item_id, user_link=current_user.id).first()
+    
     if item_exists:
         try:
-            item_exists.quantity = item_exists.quantity + 1
+            item_exists.quantity += 1
             db.session.commit()
-            flash(f' Quantity of { item_exists.product.name } has been updated')
-            return redirect(request.referrer)
+            flash(f'Quantity of {item_exists.product.name} has been updated', 'success')
         except Exception as e:
-            print('Quantity not Updated', e)
-            flash(f'Quantity of { item_exists.product.name } not updated')
-            return redirect(request.referrer)
+            db.session.rollback() 
+            print('Quantity not updated:', e)
+            flash(f'Quantity of {item_exists.product.name} could not be updated', 'error')
+    else:
+        new_cart_item = Cart()
+        new_cart_item.quantity = 1
+        new_cart_item.product_link = item_to_add.id
+        new_cart_item.user_link = current_user.id
 
-    new_cart_item = Cart()
-    new_cart_item.quantity = 1
-    new_cart_item.product_link = item_to_add.id
-    new_cart_item.user_link = current_user.id
-
-    try:
-        db.session.add(new_cart_item)
-        db.session.commit()
-        flash(f'{new_cart_item.product.name} added to cart')
-    except Exception as e:
-        print('Item not added to cart', e)
-        flash(f'{new_cart_item.product.name} has not been added to cart')
+        try:
+            db.session.add(new_cart_item)
+            db.session.commit()
+            flash(f'{new_cart_item.product.name} added to cart', 'success')
+        except Exception as e:
+            db.session.rollback()
+            print('Item not added to cart:', e)
+            flash(f'{new_cart_item.product.name} could not be added to cart', 'error')
 
     return redirect(request.referrer)
 
@@ -391,6 +392,21 @@ def order():
     return render_template('product/orders.html', orders=orders)
 
 
+@app.route('/cancel_order/<int:order_id>', methods=['POST'])
+@login_required
+def cancel_order(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if order.user_link == current_user.id and order.status == 'Pending':
+        order.status = 'Canceled'
+        db.session.commit()
+        flash('Order successfully cancelled.', 'success')  
+    else:
+        flash('Failed to cancel order. Either the order does not exist or it is not pending.')  
+    
+    return redirect(url_for('order'))
+
+
 
 @app.route('/show-invoice')
 @login_required
@@ -437,3 +453,29 @@ def purchased_products():
     unique_orders = list(unique_products.values())
 
     return render_template('user/purchased_products.html', orders=unique_orders)
+
+
+
+@app.route('/rate_product/<int:product_id>/<int:rating_value>', methods=['POST'])
+@login_required
+def rate_product(product_id, rating_value):
+    product = Product.query.get_or_404(product_id)
+    purchase = Order.query.filter_by(user_link=current_user.id, product_link=product_id, status='Delivered').first()
+
+    if not purchase:
+        return jsonify({'success': False, 'message': 'You can only rate products that have been delivered.'}), 403
+
+    if rating_value < 1 or rating_value > 5:
+        return jsonify({'success': False, 'message': 'Invalid rating value.'}), 400
+
+    rating = Rating.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if rating:
+        rating.value = rating_value
+    else:
+        rating = Rating(value=rating_value, user_id=current_user.id, product_id=product_id)
+        db.session.add(rating)
+
+    new_rating =product.average_rating()
+    db.session.commit()
+
+    return jsonify({'success': True, 'new_rating': new_rating}), 200

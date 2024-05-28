@@ -21,6 +21,12 @@ class Product(db.Model):
     carts = db.relationship('Cart', backref=db.backref('product', lazy=True), cascade= 'all, delete-orphan', single_parent=True)
     orders = db.relationship('Order', backref=db.backref('ordered_product', lazy=True), cascade= 'all, delete-orphan', single_parent=True)
 
+    ratings = db.relationship('Rating', backref='rated_product', lazy=True, cascade='all, delete-orphan')
+
+    def average_rating(self):
+        if not self.ratings:
+            return 0
+        return round(sum(rating.value for rating in self.ratings) / len(self.ratings), 1)
 
     def count_likes(self):
         return len(self.likes)
@@ -74,3 +80,12 @@ class Order(db.Model):
         Total Price: {self.price:.2f}
         Status: {self.status}
         """
+
+class Rating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    value = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+
+    user = db.relationship('User', backref='user_ratings')
+    product = db.relationship('Product', backref='product_ratings')
