@@ -21,13 +21,21 @@
                 <i class="fa fa-star text-muted"></i>
               {% endif %}
             </button>
-            {% endfor %}          
+            {% endfor %} 
+            
+            <span id="user-rating-stars-{{ product.id }}">
+              {% set user_rating = product.get_user_rating(current_user.id) if current_user.is_authenticated else 0 %}
+              <span id="user-rating-value-{{ product.id }}">({{ user_rating }})</span>
+          </span>
+
+
             <span id="rating-value-{{ product.id }}">{{ rating }}</span>
-          </span> <div>
-            {% for tag in product.tags.split(',') %}
-            <span class="badge rounded-pill text-bg-info">{{ tag.strip() }}</span>
-        {% endfor %}
-          </div>
+            </span> 
+              <div>
+                  {% for tag in product.tags.split(',') %}
+                  <span class="badge rounded-pill text-bg-info">{{ tag.strip() }}</span>
+                  {% endfor %}
+              </div>
                    
           <h3 class="secondary-font text-primary">Rs.{{ product.price }}</h3>
           <div class="d-flex flex-wrap mt-3">

@@ -25,7 +25,7 @@
                 <b><i>{{product_to_expand.desc}}</i></b> <br> 
                 Tags:
                     {% for tag in product_to_expand.tags.split(',') %}
-                        <span class="badge rounded-pill text-bg-primary">{{ tag.strip() }}</span>
+                        <span class="badge rounded-pill text-bg-info">{{ tag.strip() }}</span>
                     {% endfor %}
                  <hr>
                  <div class="card-text">
@@ -41,7 +41,13 @@
                         <i class="fa fa-star text-muted"></i>
                       {% endif %}
                     </button>
-                    {% endfor %}          
+                    {% endfor %}      
+                    
+                    <span id="user-rating-stars-{{ product_to_expand.id }}">
+                      {% set user_rating = product_to_expand.get_user_rating(current_user.id) if current_user.is_authenticated else 0 %}
+                      <span id="user-rating-value-{{ product_to_expand.id }}">({{ user_rating }})</span>
+                  </span>
+                    
                     <span id="rating-value-{{ product_to_expand.id }}">{{ rating }}</span>
                   </span>
 

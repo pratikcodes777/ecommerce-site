@@ -99,6 +99,7 @@ document.querySelectorAll('.minus-cart').forEach(button => {
 document.addEventListener('DOMContentLoaded', (event) => {
   document.querySelectorAll('[id^="rating-stars-"]').forEach(starContainer => {
       const productId = starContainer.id.split('-')[2];
+      
       const ratingValue = parseFloat(document.getElementById(`rating-value-${productId}`).innerText);
       updateRatingStars(productId, ratingValue);
   });
@@ -115,6 +116,7 @@ function rateProduct(productId, ratingValue) {
   .then(data => {
       if (data.success) {
           const newRating = parseFloat(data.new_rating).toFixed(1); 
+          document.getElementById(`user-rating-value-${productId}`).innerText = `(${ratingValue})`;
           document.getElementById(`rating-value-${productId}`).innerText = newRating;
           updateRatingStars(productId, newRating);
       } else {

@@ -27,6 +27,11 @@ class Product(db.Model):
         if not self.ratings:
             return 0
         return round(sum(rating.value for rating in self.ratings) / len(self.ratings), 1)
+    
+
+    def get_user_rating(self, user_id):
+        rating = Rating.query.filter_by(product_id=self.id, user_id=user_id).first()
+        return rating.value if rating else 0
 
     def count_likes(self):
         return len(self.likes)

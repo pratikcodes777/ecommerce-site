@@ -479,3 +479,35 @@ def rate_product(product_id, rating_value):
     db.session.commit()
 
     return jsonify({'success': True, 'new_rating': new_rating}), 200
+
+
+
+
+@app.route('/filter_products', methods=['GET', 'POST'])
+def filter_products():
+    categories = Category.query.all()
+    filtered_products = Product.query
+
+    if request.method == 'POST':
+        category_id = request.form.get('category')
+        min_price = request.form.get('min_price')
+        max_price = request.form.get('max_price')
+        min_rating = request.form.get('min_rating')
+
+        # Filter by category
+        if category_id:
+            filtered_products = filtered_products.filter(Product.category_id == category_id)
+        
+        # Filter by price
+        if min_price:
+            filtered_products = filtered_products.filter(Product.price >= float(min_price))
+        if max_price:
+            filtered_products = filtered_products.filter(Product.price <= float(max_price))
+        
+        # Filter by rating
+        if min_rating:
+            filtered_products = filtered_products.outerjoin(Rating).group_by(Product.id).having(func.avg(Rating.value) >= float(min_rating))
+
+    filtered_products = filtered_products.all()
+
+    return render_template('product/filter_products.html', categories=categories, products=filtered_products)

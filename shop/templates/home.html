@@ -24,14 +24,32 @@
             <h3 class="card-title pt-4 m-0">{{ c.name }}</h3>
           </a>
           <div class="card-text">
-            <span class="rating secondary-font">
-              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-              <iconify-icon icon="clarity:star-solid" class="text-primary"></iconify-icon>
-              5.0
+            <span id="rating-stars-{{ c.id }}">
+              {% set rating = c.average_rating() %}
+              {% for i in range(1, 6) %}
+              <button type="button" class="star" style="border: none; background: none; cursor: pointer;" onclick="rateProduct({{ c.id }}, {{ i }})">
+                {% if i <= rating %}
+                  <i class="fa fa-star text-primary"></i>
+                {% elif i - 0.5 <= rating %}
+                  <i class="fa fa-star-half-alt text-primary"></i>
+                {% else %}
+                  <i class="fa fa-star text-muted"></i>
+                {% endif %}
+              </button>
+              {% endfor %}  
+              <span id="user-rating-stars-{{ c.id }}">
+                {% set user_rating = c.get_user_rating(current_user.id) if current_user.is_authenticated else 0 %}
+                <span id="user-rating-value-{{ c.id }}">({{ user_rating }})</span>
             </span>
+              
+              <span id="rating-value-{{ c.id }}">{{ rating }}</span>
+              </span> 
+                <div>
+                    {% for tag in c.tags.split(',') %}
+                    <span class="badge rounded-pill text-bg-info">{{ tag.strip() }}</span>
+                    {% endfor %}
+                </div>
+            
             <h3 class="secondary-font text-primary">Rs.{{ c.price }}</h3>
             <div class="d-flex flex-wrap mt-3">
               <a href="#" class="btn-cart me-3 px-4 pt-3 pb-3">
