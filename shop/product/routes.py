@@ -1,4 +1,4 @@
-from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify, send_from_directory,abort, current_app
+from flask import Flask, url_for, redirect, render_template, request, flash, session, jsonify, send_from_directory,abort, current_app,json
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 import base64
@@ -8,6 +8,7 @@ from shop.product.models import Likes, Cart,Order,Rating
 from shop.user.models import User
 from fpdf import FPDF
 import os
+import requests
 import string
 from sqlalchemy import desc, or_, func, extract
 import random
@@ -58,13 +59,17 @@ def update_products(id):
     if request.method == 'POST':
         product_to_update.name = request.form['name']
         product_to_update.price = request.form['price']
-        new_image = request.files['img']
-        img_data = new_image.read()
-        encoded_image = base64.b64encode(img_data).decode('utf-8')
-        product_to_update.image_file = encoded_image
         product_to_update.tags = request.form['tags']
         product_to_update.category_id = request.form['category']
         product_to_update.desc = request.form['desc']
+
+        if 'img' in request.files:
+            new_image = request.files['img']
+            if new_image.filename != '':
+                img_data = new_image.read()
+                encoded_image = base64.b64encode(img_data).decode('utf-8')
+                product_to_update.image_file = encoded_image
+
 
         db.session.commit()
         flash("Products Updated successfully.")
@@ -276,23 +281,10 @@ def remove_cart(id):
     return redirect(url_for('show_cart'))
 
 
-# @app.route('/place-order')
-# @login_required
-# def place_order():
-#     cart_items = Cart.query.filter_by(user_link=current_user.id).all()
-#     for item in cart_items:
-#         new_order = Order(
-#             quantity=item.quantity,
-#             price=item.product.price * item.quantity,
-#             user_link=current_user.id,
-#             product_link=item.product.id
-#         )
-#         new_order.generate_invoice()  # Generate invoice for the order
-#         db.session.add(new_order)
-#         db.session.delete(item)  # Remove item from cart after placing order
-#     db.session.commit()
-#     flash('Order placed successfully. Status is Pending.')
-#     return redirect(url_for('show_cart'))
+
+def generate_invoice_number(length=8):
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 
@@ -301,44 +293,53 @@ def remove_cart(id):
 def place_order():
     cart_items = Cart.query.filter_by(user_link=current_user.id).all()
     orders = []
+    invoice_number = generate_invoice_number()
+    print(invoice_number)
     for item in cart_items:
         new_order = Order(
             quantity=item.quantity,
             price=float(item.product.price) * item.quantity,
             user_link=current_user.id,
-            product_link=item.product.id
+            product_link=item.product.id,
+            invoice_number = invoice_number
         )
         new_order.generate_invoice()
         db.session.add(new_order)
         orders.append(new_order)
-        db.session.delete(item)  
+        db.session.delete(item)
     db.session.commit()
 
-    pdf_filename = generate_invoice_pdf(orders)
-    flash('Order placed successfully. Status is Pending.')
+    return redirect(url_for('show_invoice_details', invoice_number=invoice_number))
+
+
+
+
+
+
+@app.route('/generate-pdf/<invoice_number>')
+@login_required
+def generate_pdf(invoice_number):
+    orders = Order.query.filter_by(user_link=current_user.id, invoice_number=invoice_number).all()
+    pdf_filename = generate_invoice_pdf(orders, invoice_number)
+    print(invoice_number)
+    flash('PDF generated successfully.')
     return redirect(url_for('show_invoice', pdf_filename=pdf_filename))
 
 
 
-def generate_invoice_number(length=8):
-    characters = string.ascii_uppercase + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
-
-
-
-
-def generate_invoice_pdf(orders):
+def generate_invoice_pdf(orders, invoice_number):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
     user = User.query.get(orders[0].user_link)
-    invoice_number = generate_invoice_number()
+  
 
     # User details and invoice number
-    pdf.cell(200, 10, txt=f"Invoice Number: #{invoice_number}", ln=True)
+    pdf.cell(200, 10, txt=f"Invoice Number: {invoice_number}", ln=True)
     pdf.cell(200, 10, txt=f"Customer Name: {user.username}", ln=True)
     pdf.cell(200, 10, txt=f"Customer Email: {user.email}", ln=True)
+    pdf.cell(200, 10, txt=f"Payment Status: {orders[0].payment_status}", ln=True)
     pdf.cell(200, 10, txt=" ", ln=True)
 
     # Table headers
@@ -416,6 +417,16 @@ def show_invoice():
         flash('Invoice not found.', 'danger')
         return redirect(url_for('show_cart'))
     return render_template('product/show_invoice.html', pdf_filename=pdf_filename)
+
+
+
+@app.route('/invoice-details/<invoice_number>')
+@login_required
+def show_invoice_details(invoice_number):
+    orders = Order.query.filter_by(user_link=current_user.id , invoice_number=invoice_number).all()
+    user = User.query.get(current_user.id)
+    print(invoice_number)
+    return render_template('product/invoice_details.html', orders=orders, user=user, invoice_number=invoice_number)
 
 
 
@@ -511,3 +522,116 @@ def filter_products():
     filtered_products = filtered_products.all()
 
     return render_template('product/filter_products.html', categories=categories, products=filtered_products)
+
+
+@app.route('/surprise_buy')
+@login_required
+def surprise_buy():
+    # Fetch all products
+    products = Product.query.all()
+
+    if not products:
+        flash('No products available for surprise buy.', 'warning')
+        return redirect(url_for('home'))
+
+    # Select a random product
+    random_product = random.choice(products)
+
+    # Add the random product to the user's cart with a default quantity
+    default_quantity = 1
+    new_cart_item = Cart(user_link=current_user.id, product_link=random_product.id, quantity=default_quantity)
+    db.session.add(new_cart_item)
+    db.session.commit()
+
+    flash(f'Surprise! {random_product.name} has been added to your cart.', 'success')
+    return redirect(url_for('show_cart'))
+
+
+
+
+@app.route('/initkhalti', methods=['POST'])
+@login_required
+def initkhalti():
+    url = "https://a.khalti.com/api/v2/epayment/initiate/"
+    invoice_number = request.form.get('invoice_number')
+    print(invoice_number)
+    orders = Order.query.filter_by(user_link=current_user.id, invoice_number=invoice_number).all()
+    print(orders)
+    
+    if not orders:
+        return jsonify({'error': 'No orders found for this invoice'}), 400
+    
+    amount = sum(order.price for order in orders)
+    purchase_order_id = invoice_number
+    return_url = request.form.get('return_url')
+    
+    payload = {
+        "return_url": return_url,
+        "website_url": "http://yourwebsite.com/",
+        "amount": int(amount * 100), 
+        "purchase_order_id": purchase_order_id,
+        "purchase_order_name": f"Order {invoice_number}",
+        "customer_info": {
+            "name": current_user.username,
+            "email": current_user.email,
+            "phone": "9800000000" 
+        },
+        "amount_breakdown": [
+            {
+                "label": "Total Amount",
+                "amount": int(amount * 100)
+            }
+        ],
+        "product_details": [
+            {
+                "identity": str(order.product.id),
+                "name": order.product.name,
+                "total_price": int(order.price * 100),
+                "quantity": order.quantity,
+                "unit_price": int(order.price / order.quantity * 100)
+            } for order in orders
+        ]
+    }
+    
+    headers = {
+        'Authorization': 'Key 863b3fd5c2bf4c629fc71b4dc7f508ec',
+        'Content-Type': 'application/json'
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    response_data = response.json()
+    
+    if 'payment_url' in response_data:
+        return jsonify({'payment_url': response_data['payment_url']})
+    else:
+        return jsonify({'error': 'Failed to initiate payment'}), 400
+
+
+
+@app.route('/verify', methods=['GET'])
+@login_required
+def verify():
+    pidx = request.args.get('pidx')
+    purchase_order_id = request.args.get('purchase_order_id')
+    
+    url = "https://a.khalti.com/api/v2/epayment/lookup/"
+    payload = {'pidx': pidx}
+    headers = {
+        'Authorization': 'Key 863b3fd5c2bf4c629fc71b4dc7f508ec',
+        'Content-Type': 'application/json'
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    response_data = response.json()
+    
+    if response_data.get('status') == 'Completed':
+        invoice_number = purchase_order_id 
+        orders = Order.query.filter_by(user_link=current_user.id, invoice_number=invoice_number).all()
+        for order in orders:
+            order.payment_status = 'Paid'
+        db.session.commit()
+        flash('Payment done successfully')
+        return redirect(url_for('show_invoice_details', invoice_number=invoice_number))
+    else:
+        flash('Payment is cancelled')
+        return redirect(url_for('home'))

@@ -29,6 +29,14 @@ login_manager.login_view = 'log_in'
 mail = Mail(app)
 
 
+# config.py
+KHALTI_PUBLIC_KEY = '76e5827498184e7d945d1b341a742204'
+KHALTI_SECRET_KEY = '863b3fd5c2bf4c629fc71b4dc7f508ec'
+KHALTI_PAYMENT_URL = 'https://a.khalti.com/api/v2/payment/initiate/'
+KHALTI_VERIFY_URL = 'https://a.khalti.com/api/v2/payment/verify/'
+
+
+
 
 def admin_required(func):
     @wraps(func)

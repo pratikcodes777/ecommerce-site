@@ -57,10 +57,10 @@
                 placeholder="Enter your tags">
               </div>
               <div class="mb-3">
-                <label for="price">Choose your image</label>
-                <input type="file" class="form-control form-control-lg" name="img" id="email" 
-                  placeholder="Enter Your Email Address">
-              </div>
+                <label for="image">Choose your image</label>
+                <input type="file" class="form-control form-control-lg" name="img" id="img" accept="image/*">
+               <u>Current Image:</u>  <img src="data:image/jpeg;base64,{{ product_to_update.image_file }}" class="img-fluid  " alt="Product Image" height="100px" width="100px" >
+            </div>
                 
 
             <div class="d-grid gap-3">

@@ -147,11 +147,15 @@ def search():
 @login_required
 def profile():
     if request.method =='POST':
-        image = request.files['img']   
-        img_data = image.read()
-        encoded_img = base64.b64encode(img_data).decode('utf-8')
-        current_user.image_file = encoded_img
         current_user.email = request.form["email"]
+
+        if 'img' in request.files:
+            new_image = request.files['img']
+            if new_image.filename != '':
+                img_data = new_image.read()
+                encoded_image = base64.b64encode(img_data).decode('utf-8')
+                current_user.image_file = encoded_image
+
         db.session.commit()
         flash("Account updated successfully.")
 

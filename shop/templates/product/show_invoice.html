@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
 {% block title %} Invoice {% endblock %}
+<script src="https://khalti.com/static/khalti-checkout.js"></script>
 
 {% block body %}
-
-
 <div class="container mt-5">
     <div class="col-sm-4 col-lg-3 text-center text-sm-start">
         <div class="main-logo">
-          <a href="{{url_for('home')}}">
-            <img src="{{url_for('static', filename='images/logo.png')}}" alt="logo" class="img-fluid">
-          </a>
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo" class="img-fluid">
+            </a>
         </div>
-      </div>
+    </div>
     <div class="row justify-content-center">
+        {% include '_messages.html' %}
         <div class="col-md-8 text-center">
             <a href="{{ url_for('home') }}" class="btn btn-info mt-3 " style="margin-left: 600px;">Continue Shopping</a>
             <h2>Your Invoice</h2>
@@ -21,11 +21,45 @@
             <br>
             <a href="{{ url_for('serve_invoice', filename=pdf_filename) }}" class="btn btn-primary mt-3" download>Download Invoice</a>
             <br>
-           
-
         </div>
     </div>
 </div>
+<!-- <form id="payment-form" method="post" action="{{ url_for('initkhalti') }}">
+    <input type="hidden" name="purchase_order_id" id="pid" value="1">
+    <input type="hidden" name="amount" value="1000" id="amt">
+    <input type="hidden" name="return_url" value="http://127.0.0.1:5000/verify">
+    <button type="submit" id="payment-button">Pay With Khalti</button>
+</form> -->
+
+<!-- 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#payment-button').on('click', function() {
+            var purchaseOrderId = $('#pid').val();
+            var amount = $('#amt').val();
+            var returnUrl = $('input[name="return_url"]').val();
+
+$.ajax({
+    url: '/initkhalti',
+    type: 'POST',
+    data: {
+        purchase_order_id: purchaseOrderId,
+        amount: amount,
+        return_url: returnUrl
+    },
+    success: function(response) {
+        if (response.payment_url) {
+            window.location.href = response.payment_url;
+        } else {
+            alert('Failed to initiate payment. Please try again.');
+        }
+    },
+    error: function() {
+        alert('An error occurred. Please try again.');
+    }
+});
+});
+});
+</script> -->
 {% endblock %}
-
-

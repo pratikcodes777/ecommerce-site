@@ -40,6 +40,7 @@
 
 {% endblock body %}
 
+
  <script src="static/js/jquery-1.11.0.min.js"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/index.js') }}" ></script>
 
@@ -51,7 +52,7 @@
     integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
     crossorigin="anonymous"></script>
   <script src="static/js/plugins.js"></script>
-  <script src="static/js/script.js"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
 

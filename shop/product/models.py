@@ -65,7 +65,10 @@ class Order(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(100), nullable=False, default="Pending")
+    payment_status = db.Column(db.String(100), nullable=False, default="Unpaid")
+
     invoice = db.Column(db.String(1000), nullable=True)  
+    invoice_number = db.Column(db.String(8))
 
     user_link = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     product_link = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
