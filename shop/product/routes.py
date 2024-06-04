@@ -424,9 +424,10 @@ def show_invoice():
 @login_required
 def show_invoice_details(invoice_number):
     orders = Order.query.filter_by(user_link=current_user.id , invoice_number=invoice_number).all()
+    unpaid = any(order.payment_status == 'Unpaid' for order in orders)
     user = User.query.get(current_user.id)
     print(invoice_number)
-    return render_template('product/invoice_details.html', orders=orders, user=user, invoice_number=invoice_number)
+    return render_template('product/invoice_details.html', orders=orders, user=user, invoice_number=invoice_number, unpaid=unpaid)
 
 
 
